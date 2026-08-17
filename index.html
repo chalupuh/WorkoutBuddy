@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>Falcon Bench Club — Season 1</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="wing-mark" aria-hidden="true"><span>F</span></div>
+        <div><strong>Falcon</strong><small>Bench Club</small></div>
+      </div>
+      <nav aria-label="Main navigation">
+        <button class="nav-item active" data-view="dashboard"><span>⌁</span> Clubhouse</button>
+        <button class="nav-item" data-view="log"><span>＋</span> Log session</button>
+        <button class="nav-item" data-view="workouts"><span>▤</span> Workouts</button>
+        <button class="nav-item" data-view="challenges"><span>⚑</span> Challenges</button>
+        <button class="nav-item" data-view="members"><span>◎</span> Members</button>
+        <button class="nav-item" data-view="ranking"><span>◆</span> Ranking Details</button>
+      </nav>
+      <div class="season-stamp">
+        <span>Season 01</span>
+        <strong>16 weeks</strong>
+        <small>Build bigger. Lift heavier.<br>Earn your wings.</small>
+      </div>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <div><p class="eyebrow">Falcon Bench Club / Season 1</p><h1 id="pageTitle">Clubhouse</h1></div>
+        <label class="week-control">Active week
+          <select id="activeWeek" aria-label="Active week"></select>
+        </label>
+      </header>
+
+      <section id="dashboard" class="view active" aria-labelledby="pageTitle">
+        <div class="mission-card">
+          <div><p class="eyebrow light" id="phaseLabel"></p><h2 id="missionTitle"></h2><p id="missionCopy"></p><button id="aboutCycle" class="hero-link" type="button">About this workout cycle <span>→</span></button></div>
+          <div class="challenge-badge"><small>Weekly challenge</small><strong id="challengeName"></strong><span id="challengeDetail"></span></div>
+        </div>
+        <div class="stat-row" id="clubStats"></div>
+        <div class="dashboard-grid">
+          <article class="panel leaderboard-panel">
+            <div class="panel-head"><div><p class="eyebrow">Season standings</p><h2>Flight board</h2></div><span class="live-dot">Live</span></div>
+            <div id="leaderboard" class="leaderboard"></div>
+          </article>
+          <article class="panel activity-panel">
+            <div class="panel-head"><div><p class="eyebrow">This week</p><h2>Squad status</h2></div></div>
+            <div id="squadStatus"></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="cycle" class="view">
+        <div class="detail-hero"><div><p class="eyebrow light">16-week program guide</p><h2>About this workout cycle</h2><p>A complete breakdown of how the Falcon Bench Club program builds strength, adjusts to performance, and peaks for a new max.</p></div><button class="hero-link light-link" data-view-link="dashboard" type="button">← Back to Clubhouse</button></div>
+        <div id="cycleDetails"></div>
+      </section>
+
+      <section id="log" class="view">
+        <div class="section-intro"><div><p class="eyebrow">Weekly scorecard</p><h2>Log attendance & results</h2><p>Enter the work completed. Points and rankings update immediately.</p></div><div class="points-key"><span>5 attendance</span><span>5 beat last week</span><span>5 all reps</span><span>10 challenge</span><span>20 PR</span></div></div>
+        <div id="logCards" class="log-grid"></div>
+      </section>
+
+      <section id="workouts" class="view">
+        <div class="section-intro workout-controls">
+          <div><p class="eyebrow">Flight plan</p><h2>Exact workout prescription</h2><p>Select a member to see their calculated loads for every movement.</p></div>
+          <div class="workout-actions"><label>View lifter<select id="workoutMember"></select></label><button id="editAccessories" class="primary-btn" type="button">Edit accessories</button></div>
+        </div>
+        <div id="workoutSummary"></div>
+        <div id="workoutList" class="workout-list"></div>
+      </section>
+
+      <section id="members" class="view">
+        <div class="section-intro"><div><p class="eyebrow">Roster</p><h2>Member profiles</h2><p>Update maxes and body weight. Future prescriptions recalculate automatically.</p></div><button id="addMember" class="primary-btn">Add member</button></div>
+        <div id="memberCards" class="member-grid"></div>
+      </section>
+
+      <section id="challenges" class="view">
+        <div class="section-intro"><div><p class="eyebrow">Challenge deck</p><h2>Weekly challenges</h2><p>Add club challenges, assign them to a week, or cycle them out until they are needed again.</p></div><button id="addChallenge" class="primary-btn">Add challenge</button></div>
+        <div id="challengeAssignment"></div>
+        <div class="challenge-library-head"><div><p class="eyebrow">Club library</p><h3>Challenge rotation</h3></div><div class="challenge-counts" id="challengeCounts"></div></div>
+        <div id="challengeCards" class="challenge-grid"></div>
+      </section>
+
+      <section id="ranking" class="view">
+        <div class="section-intro"><div><p class="eyebrow">Season progression</p><h2>Ranking details</h2><p>Ranks are earned from cumulative points across all 16 weeks. The current season maximum is 720 points.</p></div></div>
+        <div id="rankingDetails"></div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+  <dialog id="memberDialog">
+    <form method="dialog" id="memberForm">
+      <div class="dialog-head"><div><p class="eyebrow">Roster update</p><h2 id="dialogTitle">Add member</h2></div><button value="cancel" class="icon-btn" aria-label="Close">×</button></div>
+      <input type="hidden" id="memberId">
+      <label>Name<input id="memberName" required maxlength="24"></label>
+      <div class="field-row"><label>Bench 1RM (lb)<input id="memberMax" type="number" min="1" required></label><label>Body weight (lb)<input id="memberBody" type="number" min="1"></label></div>
+      <div class="dialog-actions"><button value="cancel" class="text-btn">Cancel</button><button value="default" id="saveMember" class="primary-btn">Save member</button></div>
+    </form>
+  </dialog>
+  <dialog id="challengeDialog">
+    <form method="dialog" id="challengeForm">
+      <div class="dialog-head"><div><p class="eyebrow" id="challengeDialogEyebrow">New challenge</p><h2 id="challengeDialogTitle">Add to the deck</h2></div><button type="button" class="icon-btn" data-close-challenge aria-label="Close">×</button></div>
+      <input type="hidden" id="challengeId">
+      <label>Challenge name<input id="challengeTitle" required maxlength="45" placeholder="Example: Tempo bench AMRAP"></label>
+      <label>How it works<input id="challengeDescription" required maxlength="90" placeholder="Example: Most clean reps at 60% wins"></label>
+      <div class="dialog-actions"><button type="button" class="text-btn" data-close-challenge>Cancel</button><button value="default" id="saveChallenge" class="primary-btn">Add challenge</button></div>
+    </form>
+  </dialog>
+  <dialog id="accessoryDialog">
+    <form method="dialog" id="accessoryForm">
+      <div class="dialog-head"><div><p class="eyebrow">Home gym setup</p><h2>Edit accessories</h2></div><button type="button" class="icon-btn" data-close-accessories aria-label="Close">×</button></div>
+      <p class="dialog-copy">Competition Bench stays locked to the program. Incline Barbell Bench runs on odd weeks and Incline Dumbbell Bench on even weeks. Customize or swap the supporting movements below.</p>
+      <div id="accessoryFields" class="accessory-fields"></div>
+      <div class="dialog-actions"><button type="button" class="text-btn" data-close-accessories>Cancel</button><button value="default" id="saveAccessories" class="primary-btn">Save lineup</button></div>
+    </form>
+  </dialog>
+  <dialog id="rankUpDialog" class="rank-up-dialog">
+    <div class="rank-up-burst" aria-hidden="true"></div>
+    <div id="rankUpLogo"></div>
+    <p class="eyebrow">Promotion earned</p>
+    <h2 id="rankUpTitle">Rank up!</h2>
+    <p id="rankUpMessage"></p>
+    <button id="closeRankUp" class="primary-btn" type="button">Continue the mission</button>
+  </dialog>
+  <script src="app.js"></script>
+</body>
+</html>
