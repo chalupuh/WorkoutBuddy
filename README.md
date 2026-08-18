@@ -14,11 +14,12 @@ Then visit `http://localhost:4173`.
 
 All member profiles, workout logs, points, ranks, and results are stored locally in the browser. No account or database is required.
 
-## Points
+## Program and points
 
-- Attendance: 5
-- Beat last week: 5
-- Hit every rep: 5
-- Win the weekly challenge: 10
-- New PR: 20
-Maximum: 45 points per member per week.
+- Weeks 4, 8, and 12 are calendar-protected recovery weeks.
+- One missed prescription repeats once; two consecutive misses trigger a 7.5% load reset.
+- Weeks 13–15 taper from a triple to crisp singles, and Week 16 uses three planned attempts.
+- Weekly scoring labels change with the phase so recovery, technique, volume, peak execution, and test-day results earn the points appropriate to that week.
+- Each week offers a maximum of 45 points: four clear 5-point objectives, 10 points for the weekly challenge winner, 5 points for the runner-up, and 10 points for the Competition Bench AMRAP Champ.
+- The other-workout target increases from one workout in Weeks 1–4, to two in Weeks 5–8, and caps at three workouts in Weeks 9–16. Any intentional workout counts; gym access is not required.
+- Week 16 results can become each member's next-season max. Starting a new season archives the completed standings and resets weekly logs.

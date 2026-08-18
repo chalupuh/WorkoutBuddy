@@ -12,18 +12,19 @@
     <aside class="sidebar">
       <div class="brand">
         <div class="wing-mark" aria-hidden="true"><span>F</span></div>
-        <div><strong>Falcon</strong><small>Bench Club</small></div>
+        <div class="brand-name"><strong>Falcon</strong><small>Bench Club</small></div>
       </div>
+      <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="Collapse navigation" aria-expanded="true" title="Collapse navigation"><span aria-hidden="true">‹</span></button>
       <nav aria-label="Main navigation">
-        <button class="nav-item active" data-view="dashboard"><span>⌁</span> Clubhouse</button>
-        <button class="nav-item" data-view="log"><span>＋</span> Log session</button>
-        <button class="nav-item" data-view="workouts"><span>▤</span> Workouts</button>
-        <button class="nav-item" data-view="challenges"><span>⚑</span> Challenges</button>
-        <button class="nav-item" data-view="members"><span>◎</span> Members</button>
-        <button class="nav-item" data-view="ranking"><span>◆</span> Ranking Details</button>
+        <button class="nav-item active" data-view="dashboard" title="Clubhouse"><span aria-hidden="true">⌁</span><span class="nav-label">Clubhouse</span></button>
+        <button class="nav-item" data-view="log" title="Log session"><span aria-hidden="true">＋</span><span class="nav-label">Log session</span></button>
+        <button class="nav-item" data-view="workouts" title="Workouts"><span aria-hidden="true">▤</span><span class="nav-label">Workouts</span></button>
+        <button class="nav-item" data-view="challenges" title="Challenges"><span aria-hidden="true">⚑</span><span class="nav-label">Challenges</span></button>
+        <button class="nav-item" data-view="members" title="Members"><span aria-hidden="true">◎</span><span class="nav-label">Members</span></button>
+        <button class="nav-item" data-view="ranking" title="Ranking Details"><span aria-hidden="true">◆</span><span class="nav-label">Ranking Details</span></button>
       </nav>
       <div class="season-stamp">
-        <span>Season 01</span>
+        <span id="seasonStampNumber">Season 01</span>
         <strong>16 weeks</strong>
         <small>Build bigger. Lift heavier.<br>Earn your wings.</small>
       </div>
@@ -31,7 +32,7 @@
 
     <main>
       <header class="topbar">
-        <div><p class="eyebrow">Falcon Bench Club / Season 1</p><h1 id="pageTitle">Clubhouse</h1></div>
+        <div><p class="eyebrow" id="seasonHeader">Falcon Bench Club / Season 1</p><h1 id="pageTitle">Clubhouse</h1></div>
         <label class="week-control">Active week
           <select id="activeWeek" aria-label="Active week"></select>
         </label>
@@ -61,7 +62,8 @@
       </section>
 
       <section id="log" class="view">
-        <div class="section-intro"><div><p class="eyebrow">Weekly scorecard</p><h2>Log attendance & results</h2><p>Enter the work completed. Points and rankings update immediately.</p></div><div class="points-key"><span>5 attendance</span><span>5 beat last week</span><span>5 all reps</span><span>10 challenge</span><span>20 PR</span></div></div>
+        <div class="section-intro"><div><p class="eyebrow">Weekly scorecard</p><h2>Log attendance & results</h2><p>Each week rewards the work that matters in its current training phase.</p></div><div class="points-key" id="weeklyPointsKey"></div></div>
+        <div class="competition-guide"><strong>Weekly awards</strong><span><b>Challenge winner · +10:</b> first place in the assigned weekly activity.</span><span><b>Challenge runner-up · +5:</b> second place in the same weekly activity.</span><span><b>AMRAP Champ · +10:</b> most clean reps on the final Competition Bench set.</span></div>
         <div id="logCards" class="log-grid"></div>
       </section>
 
@@ -75,8 +77,9 @@
       </section>
 
       <section id="members" class="view">
-        <div class="section-intro"><div><p class="eyebrow">Roster</p><h2>Member profiles</h2><p>Update maxes and body weight. Future prescriptions recalculate automatically.</p></div><button id="addMember" class="primary-btn">Add member</button></div>
+        <div class="section-intro"><div><p class="eyebrow">Roster</p><h2>Member profiles</h2><p>Update maxes and body weight. Wilks scores and future prescriptions recalculate automatically.</p></div><button id="addMember" class="primary-btn">Add member</button></div>
         <div id="memberCards" class="member-grid"></div>
+        <div id="seasonControl"></div>
       </section>
 
       <section id="challenges" class="view">
@@ -99,7 +102,9 @@
       <div class="dialog-head"><div><p class="eyebrow">Roster update</p><h2 id="dialogTitle">Add member</h2></div><button value="cancel" class="icon-btn" aria-label="Close">×</button></div>
       <input type="hidden" id="memberId">
       <label>Name<input id="memberName" required maxlength="24"></label>
-      <div class="field-row"><label>Bench 1RM (lb)<input id="memberMax" type="number" min="1" required></label><label>Body weight (lb)<input id="memberBody" type="number" min="1"></label></div>
+      <div class="field-row"><label>Bench 1RM (lb)<input id="memberMax" type="number" min="1" step="0.5" required></label><label>Body weight (lb)<input id="memberBody" type="number" min="1" step="0.1"></label></div>
+      <label>Wilks coefficient<select id="memberWilksDivision"><option value="">Select division</option><option value="men">Men's</option><option value="women">Women's</option></select></label>
+      <p class="field-help">Wilks uses different coefficient sets for men's and women's divisions.</p>
       <div class="dialog-actions"><button value="cancel" class="text-btn">Cancel</button><button value="default" id="saveMember" class="primary-btn">Save member</button></div>
     </form>
   </dialog>
@@ -107,15 +112,15 @@
     <form method="dialog" id="challengeForm">
       <div class="dialog-head"><div><p class="eyebrow" id="challengeDialogEyebrow">New challenge</p><h2 id="challengeDialogTitle">Add to the deck</h2></div><button type="button" class="icon-btn" data-close-challenge aria-label="Close">×</button></div>
       <input type="hidden" id="challengeId">
-      <label>Challenge name<input id="challengeTitle" required maxlength="45" placeholder="Example: Tempo bench AMRAP"></label>
-      <label>How it works<input id="challengeDescription" required maxlength="90" placeholder="Example: Most clean reps at 60% wins"></label>
+      <label>Challenge name<input id="challengeTitle" required maxlength="45" placeholder="Example: Weekend Step Champion"></label>
+      <label>How it works<input id="challengeDescription" required maxlength="90" placeholder="Example: Most steps recorded on Saturday wins"></label>
       <div class="dialog-actions"><button type="button" class="text-btn" data-close-challenge>Cancel</button><button value="default" id="saveChallenge" class="primary-btn">Add challenge</button></div>
     </form>
   </dialog>
   <dialog id="accessoryDialog">
     <form method="dialog" id="accessoryForm">
       <div class="dialog-head"><div><p class="eyebrow">Home gym setup</p><h2>Edit accessories</h2></div><button type="button" class="icon-btn" data-close-accessories aria-label="Close">×</button></div>
-      <p class="dialog-copy">Competition Bench stays locked to the program. Incline Barbell Bench runs on odd weeks and Incline Dumbbell Bench on even weeks. Customize or swap the supporting movements below.</p>
+      <p class="dialog-copy">Competition Bench stays locked to the program. Incline Dumbbell Bench runs on odd weeks and Incline Barbell Bench on even weeks. Customize or swap the supporting movements below.</p>
       <div id="accessoryFields" class="accessory-fields"></div>
       <div class="dialog-actions"><button type="button" class="text-btn" data-close-accessories>Cancel</button><button value="default" id="saveAccessories" class="primary-btn">Save lineup</button></div>
     </form>
