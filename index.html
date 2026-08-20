@@ -44,6 +44,8 @@
           <div class="challenge-badge"><small>Weekly challenge</small><strong id="challengeName"></strong><span id="challengeDetail"></span></div>
         </div>
         <div class="stat-row" id="clubStats"></div>
+        <div id="dashboardWeekStatus"></div>
+        <div id="weeklyRecap"></div>
         <div class="dashboard-grid">
           <article class="panel leaderboard-panel">
             <div class="panel-head"><div><p class="eyebrow">Season standings</p><h2>Flight board</h2></div><span class="live-dot">Live</span></div>
@@ -65,12 +67,13 @@
         <div class="section-intro"><div><p class="eyebrow">Weekly scorecard</p><h2>Log attendance & results</h2><p>Each week rewards the work that matters in its current training phase.</p></div><div class="points-key" id="weeklyPointsKey"></div></div>
         <div class="competition-guide"><strong>Weekly awards</strong><span><b>Challenge winner · +10:</b> first place in the assigned weekly activity.</span><span><b>Challenge runner-up · +5:</b> second place in the same weekly activity.</span><span><b>AMRAP Champ · +10:</b> most clean reps on the final Competition Bench set.</span></div>
         <div id="logCards" class="log-grid"></div>
+        <div id="weekWorkflow"></div>
       </section>
 
       <section id="workouts" class="view">
         <div class="section-intro workout-controls">
           <div><p class="eyebrow">Flight plan</p><h2>Exact workout prescription</h2><p>Select a member to see their calculated loads for every movement.</p></div>
-          <div class="workout-actions"><label>View lifter<select id="workoutMember"></select></label><button id="editAccessories" class="primary-btn" type="button">Edit accessories</button></div>
+          <div class="workout-actions"><label>View lifter<select id="workoutMember"></select></label><button id="startClubDay" class="primary-btn club-day-launch" type="button">Launch Club Day</button><button id="editAccessories" class="primary-btn" type="button">Edit accessories</button></div>
         </div>
         <div id="workoutSummary"></div>
         <div id="workoutList" class="workout-list"></div>
@@ -92,6 +95,7 @@
       <section id="ranking" class="view">
         <div class="section-intro"><div><p class="eyebrow">Season progression</p><h2>Ranking details</h2><p>Ranks are earned from cumulative points across all 16 weeks. The current season maximum is 720 points.</p></div></div>
         <div id="rankingDetails"></div>
+        <div id="seasonHistory"></div>
       </section>
     </main>
   </div>
@@ -132,6 +136,9 @@
     <h2 id="rankUpTitle">Rank up!</h2>
     <p id="rankUpMessage"></p>
     <button id="closeRankUp" class="primary-btn" type="button">Continue the mission</button>
+  </dialog>
+  <dialog id="clubDayDialog" class="club-day-dialog">
+    <div id="clubDayContent"></div>
   </dialog>
   <script src="app.js"></script>
 </body>
