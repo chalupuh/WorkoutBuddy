@@ -83,6 +83,12 @@
         <div class="section-intro"><div><p class="eyebrow">Roster</p><h2>Member profiles</h2><p>Update maxes and body weight. Wilks scores and future prescriptions recalculate automatically.</p></div><button id="addMember" class="primary-btn">Add member</button></div>
         <div id="memberCards" class="member-grid"></div>
         <div id="seasonControl"></div>
+        <section class="backup-center" aria-labelledby="backupTitle">
+          <div class="backup-head"><div><p class="eyebrow light">Data safety</p><h2 id="backupTitle">Backup & restore</h2><p>Browser storage is automatic, but it can be erased. Save a portable backup to the iPad Files app after each club meetup.</p></div><span class="backup-shield" aria-hidden="true">⬢</span></div>
+          <div class="backup-actions"><button id="exportBackup" class="primary-btn" type="button">Save backup file</button><button id="importBackup" class="edit-btn" type="button">Restore from file</button><button id="createCheckpoint" class="edit-btn" type="button">Create local checkpoint</button><input id="backupFile" type="file" accept="application/json,.json" hidden></div>
+          <div id="backupStatus" class="backup-status"></div>
+          <div id="checkpointList" class="checkpoint-list"></div>
+        </section>
       </section>
 
       <section id="challenges" class="view">

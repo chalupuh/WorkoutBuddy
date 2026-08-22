@@ -14,6 +14,14 @@ Then visit `http://localhost:4173`.
 
 All member profiles, workout logs, points, ranks, and results are stored locally in the browser. No account or database is required.
 
+## Backups
+
+Open **Members → Backup & restore** to protect browser-only data:
+
+- **Save backup file** creates a portable JSON file containing the current season, logs, roster, challenges, accessories, and archived seasons. On iPad, save it to iCloud Drive or **On My iPad** after each meetup.
+- **Restore from file** validates a Workout Buddy backup and restores it after confirmation.
+- The app also retains up to six rolling local checkpoints for accidental-edit recovery. These checkpoints remain in the same browser cache and therefore do not replace portable backup files.
+
 ## Program and points
 
 - Weeks 4, 8, and 12 are calendar-protected recovery weeks.

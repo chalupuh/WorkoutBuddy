@@ -1,5 +1,8 @@
 const STORAGE_KEY = 'falcon-bench-club-v1';
 const SIDEBAR_KEY = 'falcon-bench-club-sidebar-collapsed';
+const CHECKPOINT_KEY = 'falcon-bench-club-checkpoints-v1';
+const BACKUP_APP_ID = 'falcon-bench-club';
+const BACKUP_VERSION = 1;
 const CHALLENGE_CATALOG_VERSION = 4;
 const RECOVERY_WEEKS = [4,8,12];
 
@@ -123,7 +126,48 @@ function loadState(){
   } catch(e){}
   return {season:1,seasonHistory:[],completedWeeks:{},activeWeek:1,members:defaultMembers,logs:{},challengeLibrary:defaultChallengeLibrary,weekChallenges:defaultWeekChallenges(),challengeCatalogVersion:CHALLENGE_CATALOG_VERSION,accessories:defaultAccessories};
 }
-function saveState(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}
+function readCheckpoints(){
+  try{const checkpoints=JSON.parse(localStorage.getItem(CHECKPOINT_KEY));return Array.isArray(checkpoints)?checkpoints:[];}catch(e){return [];}
+}
+function storeCheckpoint(snapshot,reason='Automatic checkpoint',force=false){
+  if(!snapshot?.members)return;
+  const checkpoints=readCheckpoints(),now=Date.now(),last=checkpoints[0];
+  if(!force&&last&&now-new Date(last.createdAt).getTime()<30*60*1000)return;
+  checkpoints.unshift({id:`checkpoint-${now}`,createdAt:new Date(now).toISOString(),reason,state:snapshot});
+  localStorage.setItem(CHECKPOINT_KEY,JSON.stringify(checkpoints.slice(0,6)));
+}
+function saveState(options={}){
+  const previousRaw=localStorage.getItem(STORAGE_KEY);
+  if(!options.skipCheckpoint&&previousRaw){try{storeCheckpoint(JSON.parse(previousRaw),options.reason||'Automatic checkpoint');}catch(e){}}
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+}
+function backupPayload(){return {app:BACKUP_APP_ID,version:BACKUP_VERSION,exportedAt:new Date().toISOString(),season:state.season||1,state:JSON.parse(JSON.stringify(state))};}
+function validBackup(payload){const saved=payload?.state;return payload?.app===BACKUP_APP_ID&&payload.version===BACKUP_VERSION&&saved&&Array.isArray(saved.members)&&saved.members.length>0&&saved.logs&&typeof saved.logs==='object'&&Array.isArray(saved.accessories)&&Array.isArray(saved.challengeLibrary)&&Number.isInteger(+saved.activeWeek)&&+saved.activeWeek>=1&&+saved.activeWeek<=16;}
+async function exportBackup(){
+  const payload=backupPayload(),date=payload.exportedAt.slice(0,10),filename=`falcon-bench-club-season-${payload.season}-${date}.json`,file=new File([JSON.stringify(payload,null,2)],filename,{type:'application/json'});
+  try{
+    if(navigator.canShare?.({files:[file]})){await navigator.share({title:'Falcon Bench Club backup',text:`Season ${payload.season} workout data backup`,files:[file]});}
+    else{const url=URL.createObjectURL(file),link=document.createElement('a');link.href=url;link.download=filename;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+    localStorage.setItem('falcon-bench-club-last-export',payload.exportedAt);renderBackups();toast('Backup ready to save in Files');
+  }catch(error){if(error?.name!=='AbortError')toast('Backup could not be created');}
+}
+async function importBackupFile(file){
+  try{
+    const payload=JSON.parse(await file.text());
+    if(!validBackup(payload)){toast('That is not a valid Workout Buddy backup');return;}
+    const saved=payload.state,when=new Date(payload.exportedAt).toLocaleString();
+    if(!confirm(`Restore Season ${saved.season||1} with ${saved.members.length} members from ${when}? Current browser data will be preserved as a local checkpoint first.`))return;
+    storeCheckpoint(JSON.parse(JSON.stringify(state)),'Before file restore',true);
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(saved));
+    location.reload();
+  }catch(error){toast('Backup file could not be read');}
+}
+function restoreCheckpoint(id){
+  const checkpoint=readCheckpoints().find(item=>item.id===id);if(!checkpoint)return;
+  if(!confirm(`Restore the checkpoint from ${new Date(checkpoint.createdAt).toLocaleString()}?`))return;
+  storeCheckpoint(JSON.parse(JSON.stringify(state)),'Before checkpoint restore',true);
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(checkpoint.state));location.reload();
+}
 function phaseFor(week){return phases.find(p=>p.weeks.includes(week));}
 function challengeForWeek(week){return state.challengeLibrary.find(challenge=>challenge.id===state.weekChallenges[week-1])||state.challengeLibrary.find(challenge=>challenge.active)||{name:'No challenge assigned',detail:'Choose one from the Challenges page'};}
 function roundLoad(n,member){const increment=member.max<100?2.5:5;return Math.max(increment,Math.round(n/increment)*increment);}
@@ -283,6 +327,10 @@ function setup(){
   document.querySelectorAll('[data-close-accessories]').forEach(button=>button.addEventListener('click',closeAccessoryDialog));
   document.querySelectorAll('[data-close-challenge]').forEach(button=>button.addEventListener('click',closeChallengeDialog));
   document.querySelector('#closeRankUp').addEventListener('click',()=>document.querySelector('#rankUpDialog').close());
+  document.querySelector('#exportBackup').addEventListener('click',exportBackup);
+  document.querySelector('#importBackup').addEventListener('click',()=>document.querySelector('#backupFile').click());
+  document.querySelector('#backupFile').addEventListener('change',event=>{const file=event.target.files?.[0];if(file)importBackupFile(file);event.target.value='';});
+  document.querySelector('#createCheckpoint').addEventListener('click',()=>{storeCheckpoint(JSON.parse(JSON.stringify(state)),'Manual checkpoint',true);renderBackups();toast('Local checkpoint created');});
   renderAll();
 }
 function switchView(id){
@@ -295,7 +343,13 @@ function renderAll(){
   document.querySelector('#seasonHeader').textContent=`Falcon Bench Club / Season ${state.season}`;
   document.querySelector('#seasonStampNumber').textContent=`Season ${String(state.season).padStart(2,'0')}`;
   document.title=`Falcon Bench Club — Season ${state.season}`;
-  renderDashboard();renderLogs();renderWorkoutPicker();renderWorkouts();renderChallenges();renderMembers();renderSeasonControl();renderCycleDetails();renderRankingDetails();renderSeasonHistory();
+  renderDashboard();renderLogs();renderWorkoutPicker();renderWorkouts();renderChallenges();renderMembers();renderSeasonControl();renderCycleDetails();renderRankingDetails();renderSeasonHistory();renderBackups();
+}
+function renderBackups(){
+  const lastExport=localStorage.getItem('falcon-bench-club-last-export'),checkpoints=readCheckpoints(),status=document.querySelector('#backupStatus'),list=document.querySelector('#checkpointList');
+  status.innerHTML=`<div><small>Browser save</small><strong>Active now</strong><span>Changes save immediately on this device.</span></div><div><small>Last file backup</small><strong>${lastExport?new Date(lastExport).toLocaleDateString():'Not created yet'}</strong><span>${lastExport?'Keep the file in iCloud Drive or On My iPad.':'Create one before relying on the iPad at club day.'}</span></div><div><small>Local checkpoints</small><strong>${checkpoints.length} / 6</strong><span>Useful for accidental edits; not protected from cleared cache.</span></div>`;
+  list.innerHTML=checkpoints.length?`<div class="checkpoint-head"><strong>Recent local checkpoints</strong><small>Stored only in this browser</small></div>${checkpoints.map(checkpoint=>`<div class="checkpoint-row"><div><strong>${esc(checkpoint.reason)}</strong><small>${new Date(checkpoint.createdAt).toLocaleString()}</small></div><button class="edit-btn" type="button" data-restore-checkpoint="${esc(checkpoint.id)}">Restore</button></div>`).join('')}`:`<p class="empty">No local checkpoints yet. They are created periodically as changes are saved.</p>`;
+  list.querySelectorAll('[data-restore-checkpoint]').forEach(button=>button.addEventListener('click',()=>restoreCheckpoint(button.dataset.restoreCheckpoint)));
 }
 function renderCycleDetails(){
   document.querySelector('#cycleDetails').innerHTML=`<div class="cycle-summary"><article><span>01</span><small>Duration</small><strong>16 weeks</strong><p>Four progressive phases with protected recovery in Weeks 4, 8, and 12.</p></article><article><span>02</span><small>Primary goal</small><strong>Bench strength</strong><p>Build repeatable technique, productive volume, and confidence under heavier loads.</p></article><article><span>03</span><small>Auto-regulation</small><strong>Earn the increase</strong><p>One miss repeats the prescription. Two misses trigger a 7.5% reset before rebuilding.</p></article></div><div class="phase-grid">${phases.map((phase,index)=>`<article class="phase-card"><div class="phase-number">0${index+1}</div><p class="eyebrow">Weeks ${phase.weeks[0]}–${phase.weeks.at(-1)}</p><h3>${phase.name}</h3><strong>${phase.goal}</strong><p>${phase.detail}</p><dl><div><dt>Primary work</dt><dd>${phase.top}</dd></div><div><dt>Back-off work</dt><dd>${phase.back}</dd></div><div><dt>Accessories</dt><dd>${phase.accessory}</dd></div></dl></article>`).join('')}</div><div class="cycle-rules"><div><p class="eyebrow light">How progression works</p><h3>Recover together. Progress individually.</h3></div><ol><li><strong>Log the session.</strong><span>Attendance confirms the workout was attempted. Top weight and reps update e1RM as a separate performance indicator.</span></li><li><strong>Complete every rep.</strong><span>The lifter advances to the next training prescription, skipping calendar recovery weeks.</span></li><li><strong>Miss a target.</strong><span>Repeat once. A second miss reduces the full prescription by 7.5% so technique can be rebuilt.</span></li><li><strong>Protect recovery.</strong><span>Weeks 4, 8, and 12 are deloads for everyone and never erase individual progression.</span></li><li><strong>Test in Week 16.</strong><span>Use a planned opener, second attempt, and PR attempt with a spotter and safeties.</span></li></ol></div>`;
