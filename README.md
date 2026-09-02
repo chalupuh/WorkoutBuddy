@@ -1,6 +1,6 @@
 # Falcon Bench Club — Season 1
 
-A self-contained, browser-based 16-week workout and points tracker.
+A signed-in, server-backed 16-week workout and points tracker with guided custom-workout generation.
 
 ## Run it
 
@@ -12,7 +12,26 @@ node serve.mjs
 
 Then visit `http://localhost:4173`.
 
-All member profiles, workout logs, points, ranks, and results are stored locally in the browser. No account or database is required.
+The **Generate Workouts** feature requires the local server; opening `index.html` directly cannot call the private workout-generation API. Add `OPENAI_API_KEY` to an ignored `.env.local` file before starting the server.
+
+The hosted app uses ChatGPT sign-in, an owner/invitation allowlist, server-side AI calls, and a shared database for approved generated workouts. The legacy season tracker data remains browser-local during this migration and is protected by the existing backup tools.
+
+## Hosted access
+
+- `OWNER_EMAIL` identifies the master account.
+- `ALLOWED_USER_EMAILS` is a comma-separated invitation list. It can remain empty for an owner-only launch.
+- `OPENAI_API_KEY` must be configured as a hosted secret, never placed in client code.
+- The Sites database binding is named `DB` and stores private/public generated workout records by authenticated user.
+
+## Generated workouts
+
+- Start with a plain-language request. The coach confirms equipment, goal, available time, experience, and relevant movement restrictions before producing a draft.
+- Drafts stay marked **Work in progress** and can be revised repeatedly. Publishing requires two explicit review confirmations and a private/public choice.
+- Approved workouts appear in **My Generated Workouts**. Public approvals also appear in **Club Generated Workouts** on the same browser.
+- **Print / save PDF** opens the browser's print sheet with a workout-only layout; choose **Save as PDF** on supported devices.
+- Generated workouts are included in portable backup files.
+
+Until account access and shared storage are added, private/public visibility and generated-workout libraries are local to the current browser. Do not publish the GitHub Pages version with an API key: generation must run behind a server endpoint so the key never reaches client-side code.
 
 ## Backups
 

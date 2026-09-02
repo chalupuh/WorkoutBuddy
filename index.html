@@ -19,6 +19,7 @@
         <button class="nav-item active" data-view="dashboard" title="Clubhouse"><span aria-hidden="true">⌁</span><span class="nav-label">Clubhouse</span></button>
         <button class="nav-item" data-view="log" title="Log session"><span aria-hidden="true">＋</span><span class="nav-label">Log session</span></button>
         <button class="nav-item" data-view="workouts" title="Workouts"><span aria-hidden="true">▤</span><span class="nav-label">Workouts</span></button>
+        <button class="nav-item" data-view="generate" title="Generate workouts"><span aria-hidden="true">✦</span><span class="nav-label">Generate workouts</span></button>
         <button class="nav-item" data-view="challenges" title="Challenges"><span aria-hidden="true">⚑</span><span class="nav-label">Challenges</span></button>
         <button class="nav-item" data-view="members" title="Members"><span aria-hidden="true">◎</span><span class="nav-label">Members</span></button>
         <button class="nav-item" data-view="ranking" title="Ranking Details"><span aria-hidden="true">◆</span><span class="nav-label">Ranking Details</span></button>
@@ -77,6 +78,30 @@
         </div>
         <div id="workoutSummary"></div>
         <div id="workoutList" class="workout-list"></div>
+      </section>
+
+      <section id="generate" class="view">
+        <div class="generator-hero">
+          <div><p class="eyebrow light">Falcon workout lab</p><h2>Build a workout around real life.</h2><p>Describe what you need in your own words. Your coach will ask about equipment, goals, time, experience, and anything that may affect safe movement before building a draft.</p></div>
+          <div class="generator-flight"><span>01</span><b>Brief</b><i></i><span>02</span><b>Review</b><i></i><span>03</span><b>Approve</b></div>
+        </div>
+        <div class="generator-layout">
+          <section class="generator-coach" aria-labelledby="coachTitle">
+            <div class="generator-panel-head"><div><p class="eyebrow">Workout coach</p><h3 id="coachTitle">What should we build?</h3></div><button id="resetGenerator" class="text-btn" type="button">Start over</button></div>
+            <div id="generatorMessages" class="generator-messages" aria-live="polite"></div>
+            <form id="generatorForm" class="generator-composer">
+              <label for="generatorPrompt">Your request or answer</label>
+              <textarea id="generatorPrompt" rows="5" maxlength="2000" placeholder="Example: I need a 30-minute bodyweight workout while traveling. I have no equipment and want to keep my bench strength from slipping." required></textarea>
+              <div><small>Do not include private medical records. Mention injuries, pain, or movement restrictions that should shape the workout.</small><button id="sendGeneratorPrompt" class="primary-btn" type="submit">Talk to coach <span>→</span></button></div>
+            </form>
+          </section>
+          <aside id="generatorDraft" class="generator-draft" aria-live="polite"></aside>
+        </div>
+        <section class="generated-library" aria-labelledby="generatedLibraryTitle">
+          <div><p class="eyebrow">Saved flight plans</p><h2 id="generatedLibraryTitle">Generated workout library</h2><p>Only approved workouts appear here. Private workouts stay in your library; public workouts also join the club collection.</p></div>
+          <details open><summary><span>My Generated Workouts</span><b id="myWorkoutCount">0</b></summary><div id="myGeneratedWorkouts" class="generated-workout-grid"></div></details>
+          <details><summary><span>Club Generated Workouts</span><b id="clubWorkoutCount">0</b></summary><div id="clubGeneratedWorkouts" class="generated-workout-grid"></div></details>
+        </section>
       </section>
 
       <section id="members" class="view">
@@ -145,6 +170,16 @@
   </dialog>
   <dialog id="clubDayDialog" class="club-day-dialog">
     <div id="clubDayContent"></div>
+  </dialog>
+  <dialog id="publishWorkoutDialog" class="publish-workout-dialog">
+    <form method="dialog" id="publishWorkoutForm">
+      <div class="dialog-head"><div><p class="eyebrow">Final review</p><h2>Approve this workout?</h2></div><button value="cancel" class="icon-btn" aria-label="Close">×</button></div>
+      <p class="dialog-copy">Publishing locks this version into your generated workout library. You can keep it private or share it with the club.</p>
+      <label class="approval-check"><input id="reviewedWorkout" type="checkbox" required><span>I reviewed the exercises, equipment, timing, and substitutions.</span></label>
+      <label class="approval-check"><input id="acceptedWorkoutSafety" type="checkbox" required><span>I will stop or substitute any movement that causes pain or feels unsafe.</span></label>
+      <fieldset class="visibility-choice"><legend>Who can view this workout?</legend><label><input type="radio" name="workoutVisibility" value="private" checked><span><b>Private</b>Only visible to me</span></label><label><input type="radio" name="workoutVisibility" value="public"><span><b>Public</b>Share with the Falcon Bench Club</span></label></fieldset>
+      <div class="dialog-actions"><button value="cancel" class="text-btn">Keep reviewing</button><button id="publishWorkout" value="default" class="primary-btn">Approve & publish</button></div>
+    </form>
   </dialog>
   <script src="app.js"></script>
 </body>
