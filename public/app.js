@@ -92,6 +92,10 @@ let state = loadState();
 let generatorState = loadGeneratorState();
 let generatedWorkouts = loadGeneratedWorkouts();
 let currentAccess = {isOwner:true,email:null};
+let hostedApiReady = false;
+let hostedStateRevision = null;
+let hostedStateTimer = null;
+let hostedStatePoller = null;
 
 function loadGeneratorState(){
   try{const saved=JSON.parse(localStorage.getItem(GENERATOR_SESSION_KEY));if(saved&&Array.isArray(saved.messages))return saved;}catch(e){}
@@ -104,15 +108,32 @@ function saveGeneratorState(){localStorage.setItem(GENERATOR_SESSION_KEY,JSON.st
 function saveGeneratedWorkouts(){localStorage.setItem(GENERATED_WORKOUTS_KEY,JSON.stringify(generatedWorkouts));}
 async function hydrateHostedData(){
   try{
-    const session=await fetch('/api/session',{cache:'no-store'});if(session.ok)currentAccess=await session.json();
+    const session=await fetch('/api/session',{cache:'no-store'});if(!session.ok)return;currentAccess=await session.json();hostedApiReady=true;
     applyAccessRules();
+    const shared=await fetch('/api/club-state',{cache:'no-store'});
+    if(shared.ok){const data=await shared.json();if(data.state){state=data.state;hostedStateRevision=data.revision;localStorage.setItem(STORAGE_KEY,JSON.stringify(state));document.querySelector('#activeWeek').value=state.activeWeek;renderAll();}else if(currentAccess.isOwner){await pushClubState(state);}}
     const response=await fetch('/api/generated-workouts',{cache:'no-store'});if(response.ok){const data=await response.json(),seen=new Set();generatedWorkouts=[...(data.mine||[]),...(data.club||[])].filter(item=>item?.id&&!seen.has(item.id)&&seen.add(item.id));saveGeneratedWorkouts();renderGeneratedLibraries();}
+    hostedStatePoller=setInterval(refreshClubState,15000);
   }catch(error){/* Local static fallback keeps browser-saved workouts available. */}
+}
+async function pushClubState(nextState=state){
+  if(!hostedApiReady||!currentAccess.isOwner)return true;
+  const response=await fetch('/api/club-state',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({state:nextState})});
+  if(!response.ok)throw new Error('Shared club data could not be saved');
+  const data=await response.json();hostedStateRevision=data.revision;return true;
+}
+function scheduleClubStateSave(){
+  if(!hostedApiReady||!currentAccess.isOwner)return;
+  clearTimeout(hostedStateTimer);hostedStateTimer=setTimeout(()=>pushClubState(state).catch(()=>toast('Shared save failed — your browser copy is still safe')),350);
+}
+async function refreshClubState(){
+  if(!hostedApiReady||currentAccess.isOwner)return;
+  try{const response=await fetch('/api/club-state',{cache:'no-store'});if(!response.ok)return;const data=await response.json();if(!data.state||data.revision===hostedStateRevision)return;state=data.state;hostedStateRevision=data.revision;localStorage.setItem(STORAGE_KEY,JSON.stringify(state));document.querySelector('#activeWeek').value=state.activeWeek;renderAll();toast('Club updates refreshed');}catch(error){}
 }
 function applyAccessRules(){
   document.body.classList.toggle('viewer-mode',!currentAccess.isOwner);
   document.querySelector('[data-view="log"]')?.toggleAttribute('hidden',!currentAccess.isOwner);
-  ['addMember','addChallenge','editAccessories'].forEach(id=>document.querySelector(`#${id}`)?.toggleAttribute('hidden',!currentAccess.isOwner));
+  ['addMember','addChallenge','editAccessories','startClubDay'].forEach(id=>document.querySelector(`#${id}`)?.toggleAttribute('hidden',!currentAccess.isOwner));
 }
 
 function loadState(){
@@ -167,6 +188,7 @@ function saveState(options={}){
   const previousRaw=localStorage.getItem(STORAGE_KEY);
   if(!options.skipCheckpoint&&previousRaw){try{storeCheckpoint(JSON.parse(previousRaw),options.reason||'Automatic checkpoint');}catch(e){}}
   localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+  scheduleClubStateSave();
 }
 function backupPayload(){return {app:BACKUP_APP_ID,version:BACKUP_VERSION,exportedAt:new Date().toISOString(),season:state.season||1,state:JSON.parse(JSON.stringify(state)),generatedWorkouts:JSON.parse(JSON.stringify(generatedWorkouts))};}
 function validBackup(payload){const saved=payload?.state;return payload?.app===BACKUP_APP_ID&&payload.version===BACKUP_VERSION&&saved&&Array.isArray(saved.members)&&saved.members.length>0&&saved.logs&&typeof saved.logs==='object'&&Array.isArray(saved.accessories)&&Array.isArray(saved.challengeLibrary)&&Number.isInteger(+saved.activeWeek)&&+saved.activeWeek>=1&&+saved.activeWeek<=16;}
@@ -185,6 +207,7 @@ async function importBackupFile(file){
     const saved=payload.state,when=new Date(payload.exportedAt).toLocaleString();
     if(!confirm(`Restore Season ${saved.season||1} with ${saved.members.length} members from ${when}? Current browser data will be preserved as a local checkpoint first.`))return;
     storeCheckpoint(JSON.parse(JSON.stringify(state)),'Before file restore',true);
+    await pushClubState(saved);
     localStorage.setItem(STORAGE_KEY,JSON.stringify(saved));if(Array.isArray(payload.generatedWorkouts))localStorage.setItem(GENERATED_WORKOUTS_KEY,JSON.stringify(payload.generatedWorkouts));
     location.reload();
   }catch(error){toast('Backup file could not be read');}
